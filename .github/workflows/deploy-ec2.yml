@@ -1,14 +1,7 @@
 name: CD - Deploy web-services to EC2
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'web-services/**'
-      - 'common-core/**'
-      - 'build.gradle*'
-      - 'settings.gradle*'
+  workflow_dispatch:  # manual trigger only
 
 jobs:
   deploy-ec2:

@@ -1,14 +1,7 @@
 name: CD - Deploy lambda-fn to AWS Lambda
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'lambda-fn/**'
-      - 'common-core/**'
-      - 'build.gradle*'
-      - 'settings.gradle*'
+  workflow_dispatch:  # manual trigger only
 
 jobs:
   deploy-lambda:
