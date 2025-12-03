@@ -2,12 +2,6 @@ plugins {
     id 'java-library'
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(18)
-    }
-}
-
 dependencies {
 	implementation project(':common-core')
 	implementation 'com.amazonaws:aws-lambda-java-core:1.2.1'

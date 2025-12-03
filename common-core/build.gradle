@@ -2,12 +2,6 @@ plugins {
     id 'java-library'
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(18)
-    }
-}
-
 dependencies {
 	// Add any common dependencies here
     implementation 'org.springframework:spring-context'
