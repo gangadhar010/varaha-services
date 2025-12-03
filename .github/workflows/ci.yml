@@ -1,12 +1,7 @@
-name: CI - Build & Test
+name: CI - GHCR - Build & Test
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - feature/**
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   build-test:
