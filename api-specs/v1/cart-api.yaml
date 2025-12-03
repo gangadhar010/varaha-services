@@ -1,0 +1,300 @@
+openapi: 3.0.3
+info:
+  title: Cart API
+  version: 1.0.0
+  description: Cart service API for managing shopping carts and items.
+servers:
+  - url: https://api.yourstartup.com/cart/v1
+
+tags:
+  - name: Cart
+
+paths:
+  /carts:
+    post:
+      tags: [Cart]
+      summary: Create a new cart
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: string
+                  description: Guest session identifier (for anonymous carts)
+      responses:
+        '201':
+          description: Cart created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /carts/{cartId}:
+    get:
+      tags: [Cart]
+      summary: Get cart by ID
+      parameters:
+        - in: path
+          name: cartId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cart details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Cart]
+      summary: Delete/expire a cart
+      parameters:
+        - in: path
+          name: cartId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cart deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /carts/{cartId}/items:
+    post:
+      tags: [Cart]
+      summary: Add an item to cart
+      parameters:
+        - in: path
+          name: cartId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCartItemRequest'
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /carts/{cartId}/items/{itemId}:
+    put:
+      tags: [Cart]
+      summary: Update quantity of a cart item
+      parameters:
+        - in: path
+          name: cartId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Cart]
+      summary: Remove item from cart
+      parameters:
+        - in: path
+          name: cartId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /carts/merge:
+    post:
+      tags: [Cart]
+      summary: Merge guest cart into user cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [guestCartId]
+              properties:
+                guestCartId:
+                  type: string
+      responses:
+        '200':
+          description: Merged cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        productName:
+          type: string
+        unitPrice:
+          type: number
+          format: double
+        quantity:
+          type: integer
+          minimum: 1
+        subTotal:
+          type: number
+          format: double
+
+    Cart:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+          nullable: true
+        sessionId:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [ACTIVE, MERGED, EXPIRED]
+        currency:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        totalItemsAmount:
+          type: number
+          format: double
+        taxAmount:
+          type: number
+          format: double
+        shippingAmount:
+          type: number
+          format: double
+        grandTotal:
+          type: number
+          format: double
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AddCartItemRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+
+    UpdateCartItemRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

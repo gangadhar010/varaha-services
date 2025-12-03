@@ -1,0 +1,168 @@
+openapi: 3.0.3
+info:
+  title: Payments API
+  version: 1.0.0
+  description: Payments service API for charging and retrieving payment status.
+servers:
+  - url: https://api.yourstartup.com/payments/v1
+
+tags:
+  - name: Payments
+
+paths:
+  /payments/charge:
+    post:
+      tags: [Payments]
+      summary: Charge payment for an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChargeRequest'
+      responses:
+        '200':
+          description: Payment initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChargeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      summary: Get payment status
+      parameters:
+        - in: path
+          name: paymentId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /payments/webhook/{provider}:
+    post:
+      tags: [Payments]
+      summary: Payment provider webhook
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+            description: Payment provider identifier (e.g., stripe, razorpay)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Provider-specific webhook payload
+      responses:
+        '200':
+          description: Webhook received
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        paymentProvider:
+          type: string
+          example: stripe
+        providerPaymentId:
+          type: string
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, AUTHORIZED, CAPTURED, FAILED, REFUNDED]
+        failureReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChargeRequest:
+      type: object
+      required: [orderId, paymentMethod, paymentProvider]
+      properties:
+        orderId:
+          type: string
+        paymentMethod:
+          type: string
+        paymentProvider:
+          type: string
+        returnUrl:
+          type: string
+          description: URL to redirect after payment
+
+    ChargeResponse:
+      type: object
+      properties:
+        payment:
+          $ref: '#/components/schemas/Payment'
+        redirectUrl:
+          type: string
+          nullable: true
+          description: Payment URL to redirect the customer (for hosted payment pages).
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

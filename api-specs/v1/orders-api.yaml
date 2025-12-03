@@ -1,0 +1,264 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: 1.0.0
+  description: Orders service API for checkout and order management.
+servers:
+  - url: https://api.yourstartup.com/orders/v1
+
+tags:
+  - name: Orders
+
+paths:
+  /orders/checkout:
+    post:
+      tags: [Orders]
+      summary: Checkout and create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '201':
+          description: Order created (payment may still be pending)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /orders/{orderId}:
+    get:
+      tags: [Orders]
+      summary: Get order details
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /users/{userId}/orders:
+    get:
+      tags: [Orders]
+      summary: List orders of a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of orders for the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrderSummary'
+                  page:
+                    type: integer
+                  size:
+                    type: integer
+                  totalItems:
+                    type: integer
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Address:
+      type: object
+      properties:
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        phone:
+          type: string
+        fullName:
+          type: string
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        productName:
+          type: string
+        unitPrice:
+          type: number
+          format: double
+        quantity:
+          type: integer
+        lineTotal:
+          type: number
+          format: double
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [PENDING_PAYMENT, NEW, PROCESSING, SHIPPED, COMPLETED, CANCELLED]
+        totalItemsAmount:
+          type: number
+          format: double
+        shippingAmount:
+          type: number
+          format: double
+        taxAmount:
+          type: number
+          format: double
+        discountAmount:
+          type: number
+          format: double
+        grandTotal:
+          type: number
+          format: double
+        currency:
+          type: string
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    OrderSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        grandTotal:
+          type: number
+          format: double
+        currency:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CheckoutRequest:
+      type: object
+      required: [cartId, paymentMethod, paymentProvider, shippingAddress]
+      properties:
+        cartId:
+          type: string
+        paymentMethod:
+          type: string
+          example: CARD
+        paymentProvider:
+          type: string
+          example: stripe
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+        createAccount:
+          type: boolean
+          description: Create an account for guest checkout if true
+
+    CheckoutResponse:
+      type: object
+      properties:
+        order:
+          $ref: '#/components/schemas/Order'
+        paymentId:
+          type: string
+          description: Payment identifier from Payment service
+        paymentRedirectUrl:
+          type: string
+          nullable: true
+          description: If using redirect-based payment, client should redirect user to this URL.
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

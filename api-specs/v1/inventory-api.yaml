@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: Inventory API
+  version: 1.0.0
+  description: Inventory service API for product stock information.
+servers:
+  - url: https://api.yourstartup.com/inventory/v1
+
+tags:
+  - name: Inventory
+
+paths:
+  /inventory/{productId}:
+    get:
+      tags: [Inventory]
+      summary: Get inventory for a product
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Inventory details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inventory'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Inventory:
+      type: object
+      properties:
+        productId:
+          type: string
+        availableQuantity:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

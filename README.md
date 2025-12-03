@@ -46,3 +46,8 @@ To run the `web-services` application locally, use the `bootRun` task:
 ./gradlew :web-services:bootRun
 ```
 The application will be available at `http://localhost:8080`.
+
+### Accessing Swagger UI
+
+Once the `web-services` application is running, you can access the API documentation and test endpoints via Swagger UI at:
+[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)

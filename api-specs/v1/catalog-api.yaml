@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: Catalog API
+  version: 1.0.0
+  description: Catalog service API for listing and retrieving products.
+servers:
+  - url: https://api.yourstartup.com/catalog/v1
+
+tags:
+  - name: Catalog
+
+paths:
+  /products:
+    get:
+      tags: [Catalog]
+      summary: List products
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  page:
+                    type: integer
+                  size:
+                    type: integer
+                  totalItems:
+                    type: integer
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /products/{productId}:
+    get:
+      tags: [Catalog]
+      summary: Get product by ID
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        sku:
+          type: string
+        type:
+          type: string
+          enum: [PHYSICAL, SERVICE, DIGITAL]
+        basePrice:
+          type: number
+          format: double
+        currency:
+          type: string
+          example: INR
+        isActive:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
