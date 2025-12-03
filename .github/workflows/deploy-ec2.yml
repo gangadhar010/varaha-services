@@ -35,6 +35,7 @@ jobs:
 
             echo "Starting new container..."
             docker run -d \
+              --restart unless-stopped \
               --name varaha-web-services \
               -p 8080:8080 \
               065967698165.dkr.ecr.us-west-2.amazonaws.com/varaha-web-services:latest
