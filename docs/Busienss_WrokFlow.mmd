@@ -1,0 +1,17 @@
+flowchart LR
+    A[Customer browses products/services] --> B[Adds items to Cart]
+    B --> C[Reviews Cart: items, prices, totals]
+    C --> D[Clicks Checkout]
+    D --> E[Enters contact & delivery details]
+    E --> F[Chooses payment method]
+    F --> G[Reviews final order summary]
+    G --> H[Confirms payment]
+    H --> I{Payment result}
+    I -->|Success| J[Order confirmed<br/>Order number generated]
+    I -->|Failure| F2[Show error & allow retry]
+
+    J --> K[Stock reserved / updated]
+    K --> L[Confirmation email/SMS sent]
+    L --> M[Operations team prepares order]
+    M --> N[Order shipped / service delivered]
+    N --> O[Customer sees status & history<br/>Optionally gives feedback]

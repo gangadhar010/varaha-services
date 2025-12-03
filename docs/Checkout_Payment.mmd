@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant C as Client (Web/Mobile)
+    participant W as Web Services
+    participant CART as Cart Service
+    participant ORD as Order Service
+    participant PAY as Payment Service
+    participant INV as Inventory Service
+    participant NOTI as Notification Service
+    participant GATE as Payment Gateway
+
+%% 1. Client initiates checkout
+    C->>W: POST /orders/checkout (cartId, addresses, payment info)
+    W->>ORD: POST /orders/checkout
+
+%% 2. Order service validates cart
+    ORD->>CART: GET /carts/{cartId}
+    CART-->>ORD: Cart details
+
+%% 3. Order created in PENDING_PAYMENT
+    ORD-->>W: CheckoutResponse (order + paymentId + redirectUrl)
+    W-->>C: CheckoutResponse
+
+%% 4. Client redirects to payment (if redirectUrl present)
+    C->>GATE: Redirect to hosted payment page
+    GATE-->>C: Payment UI, user completes payment
+
+%% 5. Gateway notifies your backend via webhook
+    GATE->>PAY: POST /payments/webhook/{provider}
+    PAY->>ORD: Notify order paid (orderId, status=CAPTURED)
+
+%% 6. Order service post-payment actions
+    ORD->>INV: POST /inventory/deduct (order items)
+    INV-->>ORD: OK
+    ORD->>NOTI: Send order confirmation (email/SMS)
+    NOTI-->>ORD: OK
+    ORD-->>PAY: Acknowledge

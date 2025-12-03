@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant C as Client (Web/Mobile)
+    participant W as Web Services (Spring Boot)
+    participant CAT as Catalog Service
+    participant INV as Inventory Service
+    participant CART as Cart Service
+
+    C->>W: GET /products
+    W->>CAT: GET /products
+    CAT-->>W: Product list
+    W-->>C: Product list (JSON)
+
+    C->>W: POST /carts/{cartId}/items
+    W->>CART: POST /carts/{cartId}/items
+    CART->>INV: GET /inventory/{productId}
+    INV-->>CART: availableQuantity
+    CART->>CAT: GET /products/{productId}
+    CAT-->>CART: Product details (price, name)
+    CART-->>W: Updated Cart
+    W-->>C: Updated Cart (totals, items)
