@@ -1,0 +1,5 @@
+rootProject.name = "varaha-services"
+
+include("common-core")
+include("web-services")
+include("lambda-fn")
